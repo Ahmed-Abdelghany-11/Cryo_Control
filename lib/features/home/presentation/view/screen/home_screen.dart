@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../../../../core/bluetooth_service.dart';
 import 'main_app_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -13,21 +14,22 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  static const _platform = MethodChannel('com.example.cryo_control/bluetooth');
   bool isLoading = false;
   bool isBluetoothEnabled = false;
   final String arduinobtAddress = "00:22:06:01:97:D3"; // Replace with your MAC
+  late BluetoothService bluetoothService;
 
   @override
   void initState() {
     super.initState();
+    bluetoothService = BluetoothService();
     _checkBluetooth();
   }
 
   Future<void> _checkBluetooth() async {
     setState(() => isLoading = true);
     try {
-      bool isEnabled = await _platform.invokeMethod('isBluetoothEnabled');
+      bool isEnabled = await bluetoothService.isBluetoothEnabled();
       if (!isEnabled) {
         Fluttertoast.showToast(
           msg: "Please enable Bluetooth",
@@ -79,26 +81,17 @@ class _HomeScreenState extends State<HomeScreen> {
         msg: "Connecting to ARDUINOBT...",
         backgroundColor: Colors.orange,
       );
-      final connected = await _platform.invokeMethod<bool>('connectToDevice', {
-        'address': arduinobtAddress,
-      });
-      if (connected == true) {
-        Fluttertoast.showToast(
-          msg: "Connected to ARDUINOBT",
-          backgroundColor: Colors.green,
-        );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => MainAppScreen(onDisconnect: _disconnect),
-          ),
-        );
-      } else {
-        Fluttertoast.showToast(
-          msg: "Failed to connect",
-          backgroundColor: Colors.red,
-        );
-      }
+      await bluetoothService.connect(arduinobtAddress);
+      Fluttertoast.showToast(
+        msg: "Connected to ARDUINOBT",
+        backgroundColor: Colors.green,
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => MainAppScreen(bluetoothService: bluetoothService),
+        ),
+      );
     } catch (e) {
       Fluttertoast.showToast(
         msg: "Connection failed: $e",
@@ -106,14 +99,6 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     } finally {
       setState(() => isLoading = false);
-    }
-  }
-
-  Future<void> _disconnect() async {
-    try {
-      await _platform.invokeMethod('disconnect');
-    } catch (e) {
-      // Optionally show a toast
     }
   }
 

@@ -1,28 +1,50 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
-class MainAppScreen extends StatelessWidget {
-  final Future<void> Function() onDisconnect;
-  static const _platform = MethodChannel('com.example.cryo_control/bluetooth');
+import '../../../../../core/bluetooth_service.dart';
+import '../../../../control/presentation/managers/control_cubit.dart';
+import '../../../../control/presentation/view/control_screen.dart';
+import '../../../../graph/presentation/managers/graph_cubit.dart';
+import '../../../../graph/presentation/view/graph_screen.dart';
+import '../../../../settings/presentation/managers/settings_cubit.dart';
+import '../../../../settings/presentation/view/settings_screen.dart';
 
-  const MainAppScreen({super.key, required this.onDisconnect});
+class MainAppScreen extends StatefulWidget {
+  final BluetoothService bluetoothService;
 
-  Future<void> _handleLogout(BuildContext context) async {
+  const MainAppScreen({super.key, required this.bluetoothService});
+
+  @override
+  State<MainAppScreen> createState() => _MainAppScreenState();
+}
+
+class _MainAppScreenState extends State<MainAppScreen> {
+  int _selectedIndex = 0;
+  late List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [ControlScreen(), GraphScreen(), SettingsScreen()];
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  Future<void> _handleLogout() async {
     try {
-      // first call your Dart-side cleanup
-      await onDisconnect();
-
-      // then invoke native disconnect (just in case)
-      await _platform.invokeMethod('disconnect');
-
+      await widget.bluetoothService.disconnect();
       Fluttertoast.showToast(
         msg: "Disconnected",
         backgroundColor: Colors.orange,
       );
-    } on PlatformException catch (e) {
+    } catch (e) {
       Fluttertoast.showToast(
-        msg: "Error disconnecting: ${e.message}",
+        msg: "Error disconnecting: $e",
         backgroundColor: Colors.red,
       );
     } finally {
@@ -32,36 +54,55 @@ class MainAppScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("CoolFan Main App"),
-        backgroundColor: Colors.blueAccent,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Disconnect',
-            onPressed: () => _handleLogout(context),
-          ),
-        ],
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blueGrey[900]!, Colors.blueAccent.withOpacity(0.3)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => ControlCubit(widget.bluetoothService)),
+        BlocProvider(create: (_) => SettingsCubit(widget.bluetoothService)),
+        BlocProvider(create: (_) => GraphCubit(widget.bluetoothService)),
+      ],
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("CoolFan Main App"),
+          backgroundColor: Colors.blueAccent,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout),
+              tooltip: 'Disconnect',
+              onPressed: _handleLogout,
+            ),
+          ],
         ),
-        child: const Center(
-          child: Text(
-            "Welcome to CoolFan App!\nConnected to ARDUINOBT.",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.blueGrey[900]!,
+                Colors.blueAccent.withOpacity(0.3),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
           ),
+          child: _screens[_selectedIndex],
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.control_camera),
+              label: 'Control',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.show_chart),
+              label: 'Graph',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.settings),
+              label: 'Settings',
+            ),
+          ],
+          currentIndex: _selectedIndex,
+          selectedItemColor: Colors.blueAccent,
+          onTap: _onItemTapped,
         ),
       ),
     );
