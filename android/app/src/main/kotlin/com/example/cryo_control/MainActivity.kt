@@ -6,8 +6,15 @@ import android.bluetooth.BluetoothSocket
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugin.common.EventChannel // For EventChannel
 import java.io.IOException
-import java.util.*
+import java.io.InputStream // For InputStream
+import java.io.OutputStream // For OutputStream
+import java.io.BufferedReader // For BufferedReader
+import java.io.InputStreamReader // For InputStreamReader
+import java.util.UUID
+import android.os.Handler // For Handler
+import android.os.Looper // For Looper
 
 class MainActivity : FlutterActivity() {
     private val METHOD_CHANNEL = "com.example.cryo_control/bluetooth"
