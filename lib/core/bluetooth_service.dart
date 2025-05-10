@@ -51,7 +51,7 @@ class BluetoothService {
     try {
       for (int i = 0; i < 5; i++) {
         await _methodChannel.invokeMethod('sendCommand', {
-          'command': '$command\n',
+          'command': '$command \\n',
         });
         await Future.delayed(
           const Duration(milliseconds: 100),
