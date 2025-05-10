@@ -1,6 +1,6 @@
 class ControlState {
   final bool isAuto;
-  final double speed;
+  final double speed; // 0 to 100
   final bool isSwitching;
 
   ControlState({
