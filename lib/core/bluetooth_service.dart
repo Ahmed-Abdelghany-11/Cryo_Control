@@ -53,7 +53,7 @@ class BluetoothService {
         await _methodChannel.invokeMethod('sendCommand', {
           'command': '$command\\n',
         });
-        await Future.delayed(const Duration(milliseconds: 300));
+        await Future.delayed(const Duration(milliseconds: 400));
       }
     } catch (e) {
       throw Exception('Failed to send command: $e');
