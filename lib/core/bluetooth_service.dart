@@ -11,7 +11,7 @@ class BluetoothService {
   final StreamController<String> _dataStreamController =
       StreamController.broadcast();
   Stream<String> get dataStream => _dataStreamController.stream;
-  late StreamSubscription _subscription;
+  StreamSubscription? _subscription; // Nullable subscription
 
   Future<bool> isBluetoothEnabled() async {
     return await _methodChannel.invokeMethod<bool>('isBluetoothEnabled') ??
@@ -20,6 +20,10 @@ class BluetoothService {
 
   Future<void> connect(String address) async {
     try {
+      // Cancel any existing subscription
+      if (_subscription != null) {
+        await _subscription!.cancel();
+      }
       final connected = await _methodChannel.invokeMethod<bool>(
         'connectToDevice',
         {'address': address},
@@ -40,8 +44,11 @@ class BluetoothService {
   Future<void> disconnect() async {
     try {
       await _methodChannel.invokeMethod('disconnect');
-      _subscription.cancel();
-      _dataStreamController.close();
+      if (_subscription != null) {
+        await _subscription!.cancel();
+        _subscription = null;
+      }
+      // Do not close _dataStreamController
     } catch (e) {
       throw Exception('Failed to disconnect: $e');
     }
@@ -51,7 +58,7 @@ class BluetoothService {
     try {
       for (int i = 0; i < 5; i++) {
         await _methodChannel.invokeMethod('sendCommand', {
-          'command': '$command\\n',
+          'command': '$command\n', // Corrected to actual newline
         });
         await Future.delayed(const Duration(milliseconds: 400));
       }
