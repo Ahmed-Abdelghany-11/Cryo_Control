@@ -132,7 +132,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
                       ),
                       const SizedBox(height: 20),
                       Text(
-                        "Connect Now To Yor ARDUINO",
+                        "Connect Now To Yor Pad",
                         textAlign: TextAlign.start,
                         style: TextStyle(
                           fontSize: 20,
@@ -140,7 +140,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const SizedBox(height: 200),
+                      const SizedBox(height: 100),
                       ElevatedButton(
                         onPressed: _connectToDevice,
                         style: ElevatedButton.styleFrom(

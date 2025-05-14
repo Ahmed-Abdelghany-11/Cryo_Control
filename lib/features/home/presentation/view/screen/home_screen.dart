@@ -1,7 +1,6 @@
 import 'package:cryo_control/features/home/presentation/view/widgets/main_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 
 import '../../../../../core/utils/bluetooth_service.dart';
 import '../../../../control/presentation/managers/control_cubit.dart';

@@ -5,19 +5,18 @@ import 'package:flutter/material.dart';
 import 'core/utils/bluetooth_service.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final BluetoothService bluetoothService = BluetoothService();
-  MyApp({super.key});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Cryo Control',
       debugShowCheckedModeBanner: false,
-      home: HomeScreen(bluetoothService: bluetoothService),
+      home: const ConnectScreen(),
     );
   }
 }

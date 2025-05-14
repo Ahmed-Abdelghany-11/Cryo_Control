@@ -20,6 +20,7 @@ class GraphScreen extends StatelessWidget {
                     )
                     : LineChart(
                       LineChartData(
+                        minY: 0,
                         gridData: FlGridData(show: true),
                         titlesData: FlTitlesData(
                           leftTitles: AxisTitles(
@@ -29,7 +30,7 @@ class GraphScreen extends StatelessWidget {
                               getTitlesWidget:
                                   (value, meta) => Text(
                                     value.toStringAsFixed(1),
-                                    style: TextStyle(color: Colors.white),
+                                    style: TextStyle(color: Colors.black),
                                   ),
                             ),
                           ),
@@ -39,7 +40,7 @@ class GraphScreen extends StatelessWidget {
                               getTitlesWidget:
                                   (value, meta) => Text(
                                     value.toInt().toString(),
-                                    style: TextStyle(color: Colors.white),
+                                    style: TextStyle(color: Colors.black),
                                   ),
                             ),
                           ),
