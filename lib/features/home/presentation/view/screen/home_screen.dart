@@ -1,162 +1,70 @@
+import 'package:cryo_control/features/home/presentation/view/widgets/main_app_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'main_app_screen.dart';
+import '../../../../../core/utils/bluetooth_service.dart';
+import '../../../../control/presentation/managers/control_cubit.dart';
+import '../../../../control/presentation/view/control_screen.dart';
+import '../../../../graph/presentation/managers/graph_cubit.dart';
+import '../../../../graph/presentation/view/graph_screen.dart';
+import '../../../../settings/presentation/managers/settings_cubit.dart';
+import '../../../../settings/presentation/view/settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final BluetoothService bluetoothService;
+
+  const HomeScreen({super.key, required this.bluetoothService});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  static const _platform = MethodChannel('com.example.cryo_control/bluetooth');
-  bool isLoading = false;
-  bool isBluetoothEnabled = false;
-  final String arduinobtAddress = "00:22:06:01:97:D3"; // Replace with your MAC
+  int _selectedIndex = 0;
+  late List<Widget> _screens;
 
   @override
   void initState() {
     super.initState();
-    _checkBluetooth();
+    _screens = [ControlScreen(), GraphScreen(), SettingsScreen()];
   }
 
-  Future<void> _checkBluetooth() async {
-    setState(() => isLoading = true);
-    try {
-      bool isEnabled = await _platform.invokeMethod('isBluetoothEnabled');
-      if (!isEnabled) {
-        Fluttertoast.showToast(
-          msg: "Please enable Bluetooth",
-          backgroundColor: Colors.red,
-        );
-        return;
-      }
-      await _requestPermissions();
-      setState(() => isBluetoothEnabled = true);
-    } catch (e) {
-      Fluttertoast.showToast(
-        msg: "Initialization failed: $e",
-        backgroundColor: Colors.red,
-      );
-    } finally {
-      setState(() => isLoading = false);
-    }
-  }
-
-  Future<void> _requestPermissions() async {
-    Map<Permission, PermissionStatus> statuses =
-        await [
-          Permission.bluetooth,
-          Permission.bluetoothScan,
-          Permission.bluetoothConnect,
-          Permission.location,
-        ].request();
-
-    if (statuses.values.any((s) => !s.isGranted)) {
-      Fluttertoast.showToast(
-        msg: "Please grant all required permissions",
-        backgroundColor: Colors.red,
-      );
-    }
-  }
-
-  Future<void> _connectToDevice() async {
-    if (!isBluetoothEnabled) {
-      Fluttertoast.showToast(
-        msg: "Bluetooth is disabled",
-        backgroundColor: Colors.red,
-      );
-      return;
-    }
-
-    setState(() => isLoading = true);
-    try {
-      Fluttertoast.showToast(
-        msg: "Connecting to ARDUINOBT...",
-        backgroundColor: Colors.orange,
-      );
-      final connected = await _platform.invokeMethod<bool>('connectToDevice', {
-        'address': arduinobtAddress,
-      });
-      if (connected == true) {
-        Fluttertoast.showToast(
-          msg: "Connected to ARDUINOBT",
-          backgroundColor: Colors.green,
-        );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => MainAppScreen(onDisconnect: _disconnect),
-          ),
-        );
-      } else {
-        Fluttertoast.showToast(
-          msg: "Failed to connect",
-          backgroundColor: Colors.red,
-        );
-      }
-    } catch (e) {
-      Fluttertoast.showToast(
-        msg: "Connection failed: $e",
-        backgroundColor: Colors.red,
-      );
-    } finally {
-      setState(() => isLoading = false);
-    }
-  }
-
-  Future<void> _disconnect() async {
-    try {
-      await _platform.invokeMethod('disconnect');
-    } catch (e) {
-      // Optionally show a toast
-    }
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("CoolFan Connection"),
-        backgroundColor: Colors.blueAccent,
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blueGrey[900]!, Colors.blueAccent.withOpacity(0.3)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: Center(
-          child:
-              isLoading
-                  ? const CircularProgressIndicator(color: Colors.blueAccent)
-                  : ElevatedButton(
-                    onPressed: _connectToDevice,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blueAccent,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 16,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      "Connect to ARDUINOBT",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => ControlCubit(widget.bluetoothService)),
+        BlocProvider(create: (_) => SettingsCubit(widget.bluetoothService)),
+        BlocProvider(create: (_) => GraphCubit(widget.bluetoothService)),
+      ],
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(backgroundColor: Colors.white, title: MainAppBar()),
+        body: Container(child: _screens[_selectedIndex]),
+        bottomNavigationBar: BottomNavigationBar(
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.control_camera),
+              label: 'Control',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.show_chart),
+              label: 'Graph',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.settings),
+              label: 'Settings',
+            ),
+          ],
+          currentIndex: _selectedIndex,
+          selectedItemColor: Colors.blueAccent,
+          onTap: _onItemTapped,
         ),
       ),
     );

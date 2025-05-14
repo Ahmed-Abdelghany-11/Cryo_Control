@@ -1,5 +1,8 @@
+import 'package:cryo_control/features/home/presentation/view/screen/connect_screen.dart';
 import 'package:cryo_control/features/home/presentation/view/screen/home_screen.dart';
 import 'package:flutter/material.dart';
+
+import 'core/utils/bluetooth_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -10,6 +13,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(title: 'Cryo Control', home: const HomeScreen());
+    return MaterialApp(
+      title: 'Cryo Control',
+      debugShowCheckedModeBanner: false,
+      home: const ConnectScreen(),
+    );
   }
 }
