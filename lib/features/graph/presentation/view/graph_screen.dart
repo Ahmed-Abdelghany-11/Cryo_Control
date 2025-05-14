@@ -16,7 +16,7 @@ class GraphScreen extends StatelessWidget {
                 temperatures.isEmpty
                     ? const Text(
                       'No data available',
-                      style: TextStyle(color: Colors.white, fontSize: 18),
+                      style: TextStyle(color: Colors.black, fontSize: 18),
                     )
                     : LineChart(
                       LineChartData(

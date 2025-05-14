@@ -23,17 +23,13 @@ class ControlCubit extends Cubit<ControlState> {
     final cmd = 'MODE:$modeStr';
 
     // send 5× for reliability
-    for (var i = 0; i < 5; i++) {
-      await bluetoothService.sendCommand(cmd);
-    }
+    await bluetoothService.sendCommand(cmd);
 
     // if switching into Manual & we already have a speed > 0, re-send speed
     if (newMode == Mode.manual && _localSpeed > 0) {
       final val = (_localSpeed / 100 * 255).round();
       final speedCmd = 'SPEED:$val';
-      for (var i = 0; i < 5; i++) {
-        await bluetoothService.sendCommand(speedCmd);
-      }
+      await bluetoothService.sendCommand(speedCmd);
     }
 
     // lock out for 5 seconds before allowing next toggle
@@ -56,8 +52,6 @@ class ControlCubit extends Cubit<ControlState> {
     final val = (uiValue / 100 * 255).round();
     final cmd = 'SPEED:$val';
 
-    for (var i = 0; i < 5; i++) {
-      await bluetoothService.sendCommand(cmd);
-    }
+    await bluetoothService.sendCommand(cmd);
   }
 }

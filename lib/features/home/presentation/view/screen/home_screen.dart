@@ -36,23 +36,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> _handleLogout() async {
-    try {
-      await widget.bluetoothService.disconnect();
-      Fluttertoast.showToast(
-        msg: "Disconnected",
-        backgroundColor: Colors.orange,
-      );
-    } catch (e) {
-      Fluttertoast.showToast(
-        msg: "Error disconnecting: $e",
-        backgroundColor: Colors.red,
-      );
-    } finally {
-      Navigator.pushReplacementNamed(context, '/home');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
@@ -63,17 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
       child: Scaffold(
         backgroundColor: Colors.white,
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          title: MainAppBar(),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.logout),
-              tooltip: 'Disconnect',
-              onPressed: _handleLogout,
-            ),
-          ],
-        ),
+        appBar: AppBar(backgroundColor: Colors.white, title: MainAppBar()),
         body: Container(child: _screens[_selectedIndex]),
         bottomNavigationBar: BottomNavigationBar(
           items: const [
