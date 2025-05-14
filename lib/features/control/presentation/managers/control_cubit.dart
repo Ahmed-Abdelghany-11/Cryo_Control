@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/bluetooth_service.dart';
+import '../../../../core/utils/bluetooth_service.dart';
 import 'control_state.dart';
 
 class ControlCubit extends Cubit<ControlState> {

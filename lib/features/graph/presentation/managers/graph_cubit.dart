@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/bluetooth_service.dart';
+import '../../../../core/utils/bluetooth_service.dart';
 
 class GraphCubit extends Cubit<List<double>> {
   final BluetoothService bluetoothService;
