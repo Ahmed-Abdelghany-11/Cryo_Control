@@ -21,6 +21,7 @@ class GraphScreen extends StatelessWidget {
                     : LineChart(
                       LineChartData(
                         minY: 0,
+                        maxY: 100,
                         gridData: FlGridData(show: true),
                         titlesData: FlTitlesData(
                           leftTitles: AxisTitles(
