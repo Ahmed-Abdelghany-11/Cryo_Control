@@ -1,4 +1,3 @@
-// control_cubit.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/utils/bluetooth_service.dart';
 import 'control_state.dart';
@@ -7,7 +6,31 @@ class ControlCubit extends Cubit<ControlState> {
   final BluetoothService bluetoothService;
   double _localSpeed = 0;
 
-  ControlCubit(this.bluetoothService) : super(ControlState.initial());
+  ControlCubit(this.bluetoothService) : super(ControlState.initial()) {
+    // Listen to data from Arduino
+    bluetoothService.dataStream.listen((data) {
+      if (data.startsWith('MODE:')) {
+        final newModeStr = data.substring(5).trim().toUpperCase();
+        final Mode? newMode =
+            {
+              'IDLE': Mode.idle,
+              'AUTO': Mode.auto,
+              'MANUAL': Mode.manual,
+            }[newModeStr];
+
+        if (newMode != null && newMode != state.mode && !state.isSwitching) {
+          emit(state.copyWith(mode: newMode));
+        }
+      } else if (data.startsWith('SPEED:')) {
+        final value = int.tryParse(data.substring(6).trim());
+        if (value != null) {
+          final speed = (value / 255 * 100).clamp(0, 100).toDouble();
+          _localSpeed = speed;
+          emit(state.copyWith(speed: speed));
+        }
+      }
+    });
+  }
 
   /// User tapped a radio; send the mode command 5×, then unlock after 5s.
   Future<void> setMode(Mode newMode) async {
@@ -22,7 +45,6 @@ class ControlCubit extends Cubit<ControlState> {
             : 'IDLE';
     final cmd = 'MODE:$modeStr';
 
-    // send 5× for reliability
     await bluetoothService.sendCommand(cmd);
 
     // if switching into Manual & we already have a speed > 0, re-send speed

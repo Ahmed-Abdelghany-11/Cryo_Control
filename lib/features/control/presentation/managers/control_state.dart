@@ -1,9 +1,8 @@
-// control_state.dart
 enum Mode { idle, auto, manual }
 
 class ControlState {
-  final Mode? mode; // null at startup
-  final double speed; // 0–100 UI value
+  final Mode? mode;
+  final double speed;
   final bool isSwitching;
 
   ControlState({
