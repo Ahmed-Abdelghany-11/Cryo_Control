@@ -1,30 +1,63 @@
+// control_cubit.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import '../../../../core/utils/bluetooth_service.dart';
 import 'control_state.dart';
 
 class ControlCubit extends Cubit<ControlState> {
   final BluetoothService bluetoothService;
+  double _localSpeed = 0;
 
   ControlCubit(this.bluetoothService) : super(ControlState.initial());
 
-  Future<void> setMode(bool isAuto) async {
-    if (state.isSwitching) return;
-    emit(state.copyWith(isSwitching: true, isAuto: isAuto));
-    final modeCommand = isAuto ? 'MODE:AUTO' : 'MODE:MANUAL';
-    await bluetoothService.sendCommand(modeCommand);
-    if (!isAuto && state.speed > 0) {
-      final speedCommand = 'SPEED:${(state.speed / 100 * 255).round()}';
-      await bluetoothService.sendCommand(speedCommand);
+  /// User tapped a radio; send the mode command 5×, then unlock after 5s.
+  Future<void> setMode(Mode newMode) async {
+    if (state.isSwitching || state.mode == newMode) return;
+    emit(state.copyWith(isSwitching: true, mode: newMode));
+
+    final modeStr =
+        newMode == Mode.auto
+            ? 'AUTO'
+            : newMode == Mode.manual
+            ? 'MANUAL'
+            : 'IDLE';
+    final cmd = 'MODE:$modeStr';
+
+    // send 5× for reliability
+    for (var i = 0; i < 5; i++) {
+      await bluetoothService.sendCommand(cmd);
     }
-    await Future.delayed(const Duration(seconds: 3));
+
+    // if switching into Manual & we already have a speed > 0, re-send speed
+    if (newMode == Mode.manual && _localSpeed > 0) {
+      final val = (_localSpeed / 100 * 255).round();
+      final speedCmd = 'SPEED:$val';
+      for (var i = 0; i < 5; i++) {
+        await bluetoothService.sendCommand(speedCmd);
+      }
+    }
+
+    // lock out for 5 seconds before allowing next toggle
+    await Future.delayed(const Duration(seconds: 5));
     emit(state.copyWith(isSwitching: false));
   }
 
-  Future<void> setSpeed(double speed) async {
-    if (state.isAuto) return;
-    final speedCommand = 'SPEED:${(speed / 100 * 255).round()}';
-    await bluetoothService.sendCommand(speedCommand);
-    emit(state.copyWith(speed: speed));
+  /// Internal UI update while sliding
+  void updateLocalSpeed(double uiValue) {
+    _localSpeed = uiValue;
+    emit(state.copyWith(speed: uiValue));
+  }
+
+  /// Called on slider release: send SPEED once (but 5× for reliability)
+  Future<void> setSpeed(double uiValue) async {
+    if (state.mode != Mode.manual) return;
+    _localSpeed = uiValue;
+    emit(state.copyWith(speed: uiValue));
+
+    final val = (uiValue / 100 * 255).round();
+    final cmd = 'SPEED:$val';
+
+    for (var i = 0; i < 5; i++) {
+      await bluetoothService.sendCommand(cmd);
+    }
   }
 }

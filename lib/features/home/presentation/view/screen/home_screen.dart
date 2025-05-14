@@ -1,3 +1,4 @@
+import 'package:cryo_control/features/home/presentation/view/widgets/main_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -61,9 +62,10 @@ class _HomeScreenState extends State<HomeScreen> {
         BlocProvider(create: (_) => GraphCubit(widget.bluetoothService)),
       ],
       child: Scaffold(
+        backgroundColor: Colors.white,
         appBar: AppBar(
-          title: const Text("CoolFan Main App"),
-          backgroundColor: Colors.blueAccent,
+          backgroundColor: Colors.white,
+          title: MainAppBar(),
           actions: [
             IconButton(
               icon: const Icon(Icons.logout),
@@ -72,19 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Colors.blueGrey[900]!,
-                Colors.blueAccent.withOpacity(0.3),
-              ],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
-          child: _screens[_selectedIndex],
-        ),
+        body: Container(child: _screens[_selectedIndex]),
         bottomNavigationBar: BottomNavigationBar(
           items: const [
             BottomNavigationBarItem(
